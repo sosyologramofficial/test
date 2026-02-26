@@ -1,7 +1,7 @@
 import database as db
 
 workers = 1
-timeout = 120
+timeout = 600
 bind = "0.0.0.0:10000"
 
 def post_fork(server, worker):
