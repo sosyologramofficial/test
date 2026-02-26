@@ -874,6 +874,7 @@ _startup_lock = threading.Lock()
 
 def _run_startup():
     global _startup_done
+    _startup_done = True
     retries = 0
     while True:
         try:
