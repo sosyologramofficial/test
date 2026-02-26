@@ -23,7 +23,7 @@ def get_connection():
     """Returns a database connection."""
     if DB_TYPE == 'postgresql':
         import time
-        max_retries = 5
+        max_retries = 50
         for attempt in range(max_retries):
             try:
                 conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
