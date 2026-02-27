@@ -19,27 +19,14 @@ print(f"Using PostgreSQL database")
 
 db_lock = threading.Lock()  # Only used for SQLite
 
+# database.py - get_connection sade kalsın
 def get_connection():
-    """Returns a database connection."""
     if DB_TYPE == 'postgresql':
-        import time
-        max_retries = 50
-        for attempt in range(max_retries):
-            try:
-                conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
-                return conn
-            except psycopg2.OperationalError as e:
-                if attempt < max_retries - 1:
-                    retry_delay = min(2 ** attempt, 10)  # exponential backoff: 1, 2, 4, 8, 10s
-                    print(f"[DB] Connection failed (attempt {attempt+1}/{max_retries}), retrying in {retry_delay}s... Error: {e}")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"[DB] All connection attempts failed!")
-                    raise
+        conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
+        return conn
     else:
         import sqlite3
-        DB_FILE = "api.db"
-        conn = sqlite3.connect(DB_FILE, check_same_thread=False)
+        conn = sqlite3.connect("api.db", check_same_thread=False)
         conn.row_factory = sqlite3.Row
         return conn
 
