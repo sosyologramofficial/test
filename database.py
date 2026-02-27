@@ -281,7 +281,8 @@ def add_account(api_key_id, email, password):
                 conn.commit()
                 conn.close()
                 return True
-            except psycopg2.IntegrityError:
+            except Exception as e:
+                print(f"DB HATA: {e}")
                 conn.rollback()
                 conn.close()
                 return False
