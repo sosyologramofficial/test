@@ -11,7 +11,7 @@ def post_fork(server, worker):
     
     def startup():
         import time
-        max_wait = 120  # DB için max 2 dakika bekle
+        max_wait = 300  # DB için max 2 dakika bekle
         start = time.time()
         while time.time() - start < max_wait:
             try:
