@@ -1021,18 +1021,44 @@
         }
 
         // Helper function: File to Base64
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    // Remove data:image/...;base64, prefix
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
+        // Helper function: File to Base64 (with resize + JPEG conversion)
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+            const img = new Image();
+            img.onerror = reject;
+            img.onload = () => {
+                const MAX = 3000;
+                let { width, height } = img;
+
+                // Resize only if needed
+                if (width > MAX || height > MAX) {
+                    if (width >= height) {
+                        height = Math.round(height * (MAX / width));
+                        width = MAX;
+                    } else {
+                        width = Math.round(width * (MAX / height));
+                        height = MAX;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to JPEG, quality 0.92 (high quality, smaller size)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                resolve(dataUrl.split(',')[1]);
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
         // Check Task Status
         async function checkTaskStatus() {
@@ -1349,65 +1375,6 @@
         window.addEventListener('beforeunload', () => {
             stopAutoRefresh();
         });
-    </script>
-    <script>
-        async function processImage(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                // 3000px sınırı kontrolü
-                const MAX_SIZE = 3000;
-                if (width > MAX_SIZE || height > MAX_SIZE) {
-                    const ratio = Math.min(MAX_SIZE / width, MAX_SIZE / height);
-                    width *= ratio;
-                    height *= ratio;
-                    console.log(`> Boyut düşürülüyor: ${img.width}x${img.height} -> ${Math.round(width)}x${Math.round(height)}`);
-                } else {
-                    console.log(`> Boyut 3000px altında, orijinal boyut korunuyor: ${width}x${height}`);
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // JPEG'e çevir ve %90 kalite ile blob oluştur
-                canvas.toBlob((blob) => {
-                    const processedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
-                        type: "image/jpeg"
-                    });
-                    resolve(processedFile);
-                }, 'image/jpeg', 0.90);
-            };
-        };
-    });
-}
-
-// Dosya seçildiğinde tetiklenen ana kısım
-document.getElementById('fileInput').addEventListener('change', async (e) => {
-    const originalFile = e.target.files[0];
-    if (!originalFile) return;
-
-    console.log("--- İŞLEM BAŞLADI ---");
-    console.log(`Eski Dosya: ${originalFile.name} (${(originalFile.size / 1024).toFixed(2)} KB) - Tip: ${originalFile.type}`);
-
-    const processedFile = await processImage(originalFile);
-
-    console.log(`Yeni Dosya: ${processedFile.name} (${(processedFile.size / 1024).toFixed(2)} KB) - Tip: ${processedFile.type}`);
-    console.log("--- İŞLEM TAMAMLANDI, API'YE GÖNDERİLEBİLİR ---");
-
-    // Burada API'ye gönderme fonksiyonunu çağırabilirsin (Örn: uploadFile(processedFile))
-});
     </script>
 </body>
 </html>
